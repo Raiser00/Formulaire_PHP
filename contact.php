@@ -2,6 +2,7 @@
 $pageTitre = "Contact";
 $metaDescription = "Contactez-nous pour toute question!";
 $currentPage = 'contact';
+require_once 'connexionManager.php';
 require_once 'header.php';
 ?>
 
@@ -10,48 +11,55 @@ require_once 'header.php';
 $errors = array();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Vérification du champ nom
-    $nom = $_POST["nom"];
-    if (empty($nom)) {
-        $errors["nom"] = "Le champ nom est requis.";
-    } elseif (strlen($nom) < 2 || strlen($nom) > 255) {
-        $errors["nom"] = "Le nom doit comporter entre 2 et 255 caractères.";
+    if(isset($_POST['tokenCsrf']) && $_POST['tokenCsrf'] === $_SESSION['tokenCsrf']) {
+        // Vérification du champ nom
+        $nom = $_POST["nom"];
+        if (empty($nom)) {
+            $errors["nom"] = "Le champ nom est requis.";
+        } elseif (strlen($nom) < 2 || strlen($nom) > 255) {
+            $errors["nom"] = "Le nom doit comporter entre 2 et 255 caractères.";
+        }
+
+        // Vérification du champ prénom
+        $prenom = $_POST["prenom"];
+        if (strlen($prenom) > 255) {
+            $errors["prenom"] = "Le prénom ne peut pas dépasser 255 caractères.";
+        }
+
+        // Vérification du champ email
+        $email = $_POST["email"];
+        if (empty($email)) {
+            $errors["email"] = "Le champ email est requis.";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors["email"] = "Adresse email invalide.";
+        }
+
+        // Vérification du champ message
+        $message = $_POST["message"];
+        if (empty($message)) {
+            $errors["message"] = "Le champ message est requis.";
+        } elseif (strlen($message) < 10 || strlen($message) > 3000) {
+            $errors["message"] = "Le message doit comporter entre 10 et 3000 caractères.";
+        }
+
+        // Si aucune erreur, traitement du formulaire
+        if (empty($errors)) {
+            // Traitement du formulaire (envoi d'email, enregistrement en base de données, etc.)
+
+            // Affichage du message de succès
+            echo "<p>Le formulaire a bien été envoyé !</p>";
+        }
     }
-
-    // Vérification du champ prénom
-    $prenom = $_POST["prenom"];
-    if (strlen($prenom) > 255) {
-        $errors["prenom"] = "Le prénom ne peut pas dépasser 255 caractères.";
-    }
-
-    // Vérification du champ email
-    $email = $_POST["email"];
-    if (empty($email)) {
-        $errors["email"] = "Le champ email est requis.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors["email"] = "Adresse email invalide.";
-    }
-
-    // Vérification du champ message
-    $message = $_POST["message"];
-    if (empty($message)) {
-        $errors["message"] = "Le champ message est requis.";
-    } elseif (strlen($message) < 10 || strlen($message) > 3000) {
-        $errors["message"] = "Le message doit comporter entre 10 et 3000 caractères.";
-    }
-
-    // Si aucune erreur, traitement du formulaire
-    if (empty($errors)) {
-        // Traitement du formulaire (envoi d'email, enregistrement en base de données, etc.)
-
-        // Affichage du message de succès
-        echo "<p>Le formulaire a bien été envoyé !</p>";
+    else
+    {
+        echo "error";
     }
 }
 ?>
 
 
 <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+<input type="hidden" name="tokenCsrf" value="<?=ConnexionManager::createTokenCsrf()?>">
     <label for="nom">Nom :</label>
     <input type="text" id="nom" name="nom" value="<?php echo isset($nom) ? htmlspecialchars($nom) : ''; ?>">
     <?php if (isset($errors["nom"])) echo "<p>{$errors["nom"]}</p>"; ?>

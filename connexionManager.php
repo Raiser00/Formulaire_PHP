@@ -56,6 +56,12 @@ class ConnexionManager
             return false;
         }
     }
+
+    public static function createTokenCsrf():string
+    {
+        $_SESSION['tokenCsrf'] = bin2hex(random_bytes(32));
+        return $_SESSION['tokenCsrf'];
+    }
 }
 
 

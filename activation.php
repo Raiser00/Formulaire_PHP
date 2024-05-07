@@ -5,22 +5,28 @@ require_once 'header.php';
 
 if($_SERVER["REQUEST_METHOD"] == "POST")
 {
-    if(!empty($_POST["activationCode"]) && strlen($_POST["activationCode"]) == 5)
-    {
-       if(ConnexionManager::is_valideCode($_POST['activation_user_id'], $_POST['activationCode']))
-       {
-        $_SESSION['activation']= 1;
-        header("Location: connexion.php");
-        exit;
-       }
-       else
-       {
-        $message = "code activation erroné";
-       }
+    if(isset($_POST['tokenCsrf']) && $_POST['tokenCsrf'] === $_SESSION['tokenCsrf']){
+        if(!empty($_POST["activationCode"]) && strlen($_POST["activationCode"]) == 5)
+        {
+        if(ConnexionManager::is_valideCode($_POST['activation_user_id'], $_POST['activationCode']))
+        {
+            $_SESSION['activation']= 1;
+            header("Location: connexion.php");
+            exit;
+        }
+        else
+        {
+            $message = "code activation erroné";
+        }
+        }
+        else
+        {
+            $message = "erreur formulaire";
+        }
     }
     else
     {
-        $message = "erreur formulaire";
+        echo "error";
     }
 }
 
@@ -34,6 +40,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST")
 <?=$message ?? '' ?>
 
 <form method="post">
+<input type="hidden" name="tokenCsrf" value="<?=ConnexionManager::createTokenCsrf()?>">
     <input type="hidden" value="<?=$_SESSION['id']?>" id="activation_user_id" name="activation_user_id">
 
     <label for="activationCode">Entrer votre code d'activation</label><br>
